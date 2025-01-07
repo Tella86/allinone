@@ -1,3 +1,26 @@
+<?php
+$service = $_GET['service'] ?? '';
+$serviceDetails = [
+    'electrical_repair' => [
+        'title' => 'Electrical Repair',
+        'description' => 'Professional electrical repair services to resolve all issues efficiently.',
+    ],
+    'plumbing_repair' => [
+        'title' => 'Plumbing Repair',
+        'description' => 'Expert plumbing services to fix leaks and ensure smooth water flow.',
+    ],
+    'cleaning' => [
+        'title' => 'Cleaning Services',
+        'description' => 'Comprehensive cleaning for houses, offices, and clothes.',
+    ],
+];
+
+if ($service && !array_key_exists($service, $serviceDetails)) {
+    die('Invalid service selected.');
+}
+
+$details = $service ? $serviceDetails[$service] : null;
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,68 +28,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Service Booking</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">Repair Services</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Services</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
-            </ul>
-        </div>
-    </nav>
-
     <div class="container mt-5">
-        <h2>Book a Service</h2>
-        <p>Choose a service and provide your location to book a technician.</p>
-        <form id="bookingForm" method="POST" action="process_booking.php">
-            <div class="form-group">
-                <label for="serviceType">Service Type:</label>
-                <select class="form-control" id="serviceType" name="service_type" required>
-                    <option value="">-- Select Service --</option>
-                    <option value="electrical_repair">Electrical Repair</option>
-                    <option value="electrical_installation">Electrical Installation</option>
-                    <option value="plumbing_repair">Plumbing Repair</option>
-                    <option value="cleaning">Cleaning</option>
-                    <option value="gardening">Gardening</option>
-                    <option value="baby_care">Baby Care</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="location">Location:</label>
-                <input type="text" class="form-control" id="location" name="location" placeholder="Enter your location manually or use GPS" required>
-                <button type="button" class="btn btn-secondary mt-2" onclick="getLocation()">Use My Location</button>
-            </div>
-            <div class="form-group">
-                <label for="comments">Additional Comments:</label>
-                <textarea class="form-control" id="comments" name="comments" rows="3" placeholder="Provide any additional details..."></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Book Now</button>
-        </form>
+        <h2>Available Services</h2>
+        <div class="row">
+            <?php foreach ($serviceDetails as $key => $service): ?>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title"><?php echo $service['title']; ?></h5>
+                            <p class="card-text"><?php echo $service['description']; ?></p>
+                            <button class="btn btn-primary" onclick="openModal('<?php echo $service['title']; ?>')">Book This Service</button>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modalServiceTitle"></h2>
+            <form id="bookingForm" method="POST" action="process_booking.php">
+                <div class="form-group">
+                    <label for="serviceType">Service Type:</label>
+                    <input type="text" class="form-control" id="serviceType" name="service_type" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <input type="text" class="form-control" id="location" name="location" placeholder="Enter your location" required>
+                </div>
+                <div class="form-group">
+                    <label for="comments">Additional Comments:</label>
+                    <textarea class="form-control" id="comments" name="comments" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Book Now</button>
+            </form>
+        </div>
     </div>
 
     <script>
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        document.getElementById('location').value = `Lat: ${position.coords.latitude}, Lng: ${position.coords.longitude}`;
-                    },
-                    (error) => {
-                        alert('Unable to fetch your location. Please enter manually.');
-                    }
-                );
-            } else {
-                alert('Geolocation is not supported by your browser.');
-            }
+        function openModal(serviceTitle) {
+            document.getElementById('modalServiceTitle').innerText = serviceTitle;
+            document.getElementById('serviceType').value = serviceTitle;
+            document.getElementById('bookingModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('bookingModal').style.display = 'none';
         }
     </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
