@@ -1,32 +1,28 @@
 <?php
 // Database connection
-$host = 'localhost';
-$user = 'root';
-$password = 'Elon2508/*-';
-$dbname = 'repair_services';
-$conn = new mysqli($host, $user, $password, $dbname);
+$conn = new mysqli("localhost", "root", "Elon2508/*-", "repair_services");
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $service_type = $_POST['service_type'];
-    $location = $_POST['location'];
-    $comments = $_POST['comments'];
-    $status = 'pending';
+// Check if form is submitted
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $name = $conn->real_escape_string($_POST['name']);
+    $phone = $conn->real_escape_string($_POST['phone']);
+    $location = $conn->real_escape_string($_POST['location']);
+    $service_id = $conn->real_escape_string($_POST['service_id']);
+    $status = "Pending"; // Default booking status
 
-    $sql = "INSERT INTO bookings (service_type, location, comments, status) VALUES (?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssss", $service_type, $location, $comments, $status);
+    // Insert booking into the database
+    $sql = "INSERT INTO bookings (name, phone, location, service_id, status) VALUES ('$name', '$phone', '$location', '$service_id', '$status')";
 
-    if ($stmt->execute()) {
-        echo "<p>Service booked successfully!</p>";
+    if ($conn->query($sql) === TRUE) {
+        echo "<script>alert('Booking successful! Our technician will contact you shortly.'); window.location.href='index.php';</script>";
     } else {
-        echo "<p>Error: " . $conn->error . "</p>";
+        echo "<script>alert('Error: " . $conn->error . "'); window.location.href='index.php';</script>";
     }
-
-    $stmt->close();
 }
+
 $conn->close();
 ?>
